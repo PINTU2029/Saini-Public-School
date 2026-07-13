@@ -31,7 +31,7 @@ interface Faculty {
 export default function FacultyScreen() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); //  Strict Admin Protection Gate
+  const [isAdmin, setIsAdmin] = useState(false); 
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,14 +48,12 @@ export default function FacultyScreen() {
 
   const fetchInitialData = async () => {
     try {
-      //  Absolute Storage Verification Matrix
       const role = await AsyncStorage.getItem('user_role');
       
-      // Strict role authentication - koi testing bypass nahi
       if (role && role.toLowerCase().trim() === 'admin') {
         setIsAdmin(true);
       } else {
-        setIsAdmin(false); // Baki sab standard viewers se buttons automatically hide ho jayenge
+        setIsAdmin(false); 
       }
 
       const data = await api.get<any>("/faculties");
@@ -88,6 +86,7 @@ export default function FacultyScreen() {
     }
   };
 
+  // 🚀 FIXED: Pass Secure Admin Auth Bearer Token inside HTTP headers configuration matrix
   const handleAddFaculty = async () => {
     if (!name || !subject) {
       Alert.alert("Alert", "Name aur Subject likhna zaroori hai!");
@@ -95,43 +94,59 @@ export default function FacultyScreen() {
     }
 
     try {
-      await api.post("/faculty/add", {
+      const token = await AsyncStorage.getItem("user_token");
+
+      // Direct axios runtime headers configuration block insertion
+      await (api as any).post("/faculty/add", {
         name,
         designation: subject,
         qualification: "Faculty Member", 
         photo_url: photoUrl,
         about
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       Alert.alert("Success", "Faculty profile successfully save ho gayi!");
       setIsAddModalOpen(false);
       clearForm();
       fetchInitialData();
-    } catch (error) {
-      Alert.alert("Error", "Save karne mein dikkat aayi.");
+    } catch (error: any) {
+      console.error("Add Faculty Error Payload:", error);
+      Alert.alert("Error", error?.response?.data?.detail || "Save karne mein dikkat aayi.");
     }
   };
 
+  // 🚀 FIXED: Secure dynamic header parsing mapping
   const handleEditFaculty = async () => {
     if (!selectedFaculty) return;
 
     try {
-      await api.put(`/faculty/edit/${selectedFaculty.faculty_id}`, {
+      const token = await AsyncStorage.getItem("user_token");
+
+      await (api as any).put(`/faculty/edit/${selectedFaculty.faculty_id}`, {
         name,
         designation: subject,
         photo_url: photoUrl,
         about
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       Alert.alert("Updated", "Profile information update ho gayi!");
       setIsEditModalOpen(false);
       clearForm();
       fetchInitialData();
-    } catch (error) {
-      Alert.alert("Error", "Update process interrupt ho gaya.");
+    } catch (error: any) {
+      Alert.alert("Error", error?.response?.data?.detail || "Update process interrupt ho gaya.");
     }
   };
 
+  // 🚀 FIXED: Secure Delete Auth sequence pass execution
   const handleDeleteFaculty = async (facultyId: string) => {
     Alert.alert(
       "Confirm Delete",
@@ -143,11 +158,19 @@ export default function FacultyScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await (api as any).request({ method: 'DELETE', url: `/faculty/delete/${facultyId}` });
+              const token = await AsyncStorage.getItem("user_token");
+
+              await (api as any).request({ 
+                method: 'DELETE', 
+                url: `/faculty/delete/${facultyId}`,
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              });
               Alert.alert("Removed", "Faculty member successfully deleted.");
               fetchInitialData();
-            } catch (error) {
-              Alert.alert("Error", "Delete process failed.");
+            } catch (error: any) {
+              Alert.alert("Error", error?.response?.data?.detail || "Delete process failed.");
             }
           }
         }
@@ -190,7 +213,6 @@ export default function FacultyScreen() {
           <Text style={styles.headerTitle}>School Faculty</Text>
         </View>
 
-        {/* 🔒 Top "+ Add New" Button locked ONLY for true Admin profiles */}
         {isAdmin && (
           <TouchableOpacity 
             style={styles.addButton} 
@@ -224,7 +246,6 @@ export default function FacultyScreen() {
               </Text>
             ) : null}
 
-            {/* 🔒 Edit/Delete control panel completely locked behind hardcoded isAdmin check */}
             {isAdmin && (
               <View style={styles.adminActionsRow}>
                 <TouchableOpacity style={[styles.actionBtn, styles.editBtn]} onPress={() => openEditModal(item)}>
