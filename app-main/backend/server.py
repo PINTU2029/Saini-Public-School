@@ -368,22 +368,22 @@ def send_otp_email(receiver_email: str, otp: str):
         </html>
         """
 
-        # 🌐 Direct Cloud Outbound API Method (No Port 587 Blockage)
+        # Secure token pickup from environment configuration
+        WEB3FORMS_KEY = os.environ.get("WEB3FORMS_ACCESS_KEY", "")
+
         response = httpx.post(
-            "https://api.mailersend.com/v1/email",
-            headers={
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
-            },
+            "https://api.web3forms.com/submit",
             json={
+                "access_key": WEB3FORMS_KEY,
+                "from_name": "Saini Public School",
+                "subject": "Email Verification OTP",
                 "to": receiver_email,
-                "subject": "Saini Public School - Email Verification OTP",
                 "html": html_content
             },
             timeout=10.0
         )
         
-        print(f"Cloud API Email Dispatch Status: {response.status_code}")
+        print(f"Cloud HTTP Email Dispatch Status: {response.status_code}")
         return True
 
     except Exception as e:
