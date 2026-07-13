@@ -353,6 +353,15 @@ SMTP_PORT = 587
 SENDER_EMAIL = os.environ.get("SMTP_SENDER_EMAIL", "")
 SENDER_PASSWORD = os.environ.get("SMTP_SENDER_PASSWORD", "")
 
+# ==========================================
+# ⚡ BLOCK 1: SECURE DYNAMIC EMAIL DISPATCH
+# ==========================================
+
+import os
+import random
+import httpx
+from fastapi import HTTPException, status
+
 def send_otp_email(receiver_email: str, otp: str):
     try:
         html_content = f"""
@@ -366,10 +375,14 @@ def send_otp_email(receiver_email: str, otp: str):
         </html>
         """
 
-        # 🔒 Purely dynamic fetching from your .env / Render Environment Config
+        # 🔒 STRICTLY FROM ENVIRONMENT ONLY (No hardcoded keys)
         WEB3FORMS_KEY = os.environ.get("WEB3FORMS_ACCESS_KEY", "")
 
-        # Proper JSON and Accept headers to prevent 403 Forbidden on backend calls
+        if not WEB3FORMS_KEY:
+            print("Error: WEB3FORMS_ACCESS_KEY missing from environment setup.")
+            return False
+
+        # Web3Forms API Call
         response = httpx.post(
             "https://api.web3forms.com/submit",
             headers={
@@ -379,7 +392,7 @@ def send_otp_email(receiver_email: str, otp: str):
             json={
                 "access_key": WEB3FORMS_KEY,
                 "from_name": "Saini Public School",
-                "subject": "Saini Public School - Email Verification OTP",
+                "subject": "Email Verification OTP",
                 "to": receiver_email,
                 "html": html_content
             },
@@ -387,33 +400,30 @@ def send_otp_email(receiver_email: str, otp: str):
         )
         
         print(f"Web3Forms Dispatch Status: {response.status_code}")
-        print(f"Web3Forms Response: {response.text}")
         
         if response.status_code == 200:
             return True
         else:
+            print(f"Provider Error Payload: {response.text}")
             return False
 
     except Exception as e:
         print(f"Mail Pipeline Exception: {str(e)}")
-        raise Exception("Failed to send email via Cloud API network gateway.")
+        return False
     
     
 @api.post("/auth/send-otp")
 async def send_registration_otp(inp: OTPRequestIn):
     email = inp.email.lower().strip()
     
-    # Check if user already exists
     if await db.users.find_one({"email": email}):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
             detail="Email already registered"
         )
         
-    # Generate 6-digit random code string
     otp_code = str(random.randint(100000, 999999))
     
-    # Store temporal token states inside otp collection
     await db.otp_verifications.update_one(
         {"email": email},
         {
@@ -426,13 +436,13 @@ async def send_registration_otp(inp: OTPRequestIn):
         upsert=True
     )
     
-    # 🔥 YAHA MAGIC HAI: Backend se direct email fail ho raha tha, 
-    # isiliye hum OTP ko frontend ko return kar rahe hain taaki client-side se mail jaye!
-    return {
-        "status": "success", 
-        "message": "OTP generated successfully",
-        "otp_bypass_delivery": otp_code  # Yeh frontend padh lega
-    }
+    if send_otp_email(email, otp_code):
+        return {"status": "success", "message": "Verification OTP sent to your email."}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Failed to send email. Verification pipeline error."
+        )
     
 
 # ==========================================
