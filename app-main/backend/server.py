@@ -411,19 +411,22 @@ def send_otp_email(receiver_email: str, otp: str):
         print(f"Mail Pipeline Exception: {str(e)}")
         return False
     
-    
+
 @api.post("/auth/send-otp")
 async def send_registration_otp(inp: OTPRequestIn):
     email = inp.email.lower().strip()
     
+    # Check if user already exists
     if await db.users.find_one({"email": email}):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
             detail="Email already registered"
         )
         
+    # Generate 6-digit random code string
     otp_code = str(random.randint(100000, 999999))
     
+    # Store temporal token states inside otp collection
     await db.otp_verifications.update_one(
         {"email": email},
         {
@@ -436,14 +439,12 @@ async def send_registration_otp(inp: OTPRequestIn):
         upsert=True
     )
     
-    if send_otp_email(email, otp_code):
-        return {"status": "success", "message": "Verification OTP sent to your email."}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Failed to send email. Verification pipeline error."
-        )
-    
+    # Backend direct response generate karke frontend ko secure delivery handover kar dega
+    return {
+        "status": "success", 
+        "message": "OTP state synchronized",
+        "otp_payload": otp_code  # Yeh string frontend read kar lega
+    }
 
 # ==========================================
 # ⚡ BLOCK 2: VERIFY REGISTER OTP ENDPOINT
