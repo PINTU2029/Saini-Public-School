@@ -10,7 +10,8 @@ import {
   Alert, 
   ActivityIndicator, 
   ScrollView,
-  Image
+  Image,
+  Platform
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
@@ -23,7 +24,8 @@ import { COLORS, RADII, SPACING } from "@/src/lib/theme";
 interface Faculty {
   faculty_id: string;
   name: string;
-  subject: string;
+  designation?: string;
+  subject?: string;
   about: string;
   photo_url: string;
 }
@@ -86,7 +88,7 @@ export default function FacultyScreen() {
     }
   };
 
-  // 🚀 FIXED: Pass Secure Admin Auth Bearer Token inside HTTP headers configuration matrix
+  // 🚀 TYPESCRIPT FIXED: Safe network request blocks
   const handleAddFaculty = async () => {
     if (!name || !subject) {
       Alert.alert("Alert", "Name aur Subject likhna zaroori hai!");
@@ -96,16 +98,15 @@ export default function FacultyScreen() {
     try {
       const token = await AsyncStorage.getItem("user_token");
 
-      // Direct axios runtime headers configuration block insertion
       await (api as any).post("/faculty/add", {
-        name,
-        designation: subject,
+        name: name.trim(),
+        designation: subject.trim(),
         qualification: "Faculty Member", 
         photo_url: photoUrl,
-        about
+        about: about.trim()
       }, {
         headers: {
-          Authorization: `Bearer ${token}`
+          "Authorization": `Bearer ${token}`
         }
       });
 
@@ -114,12 +115,12 @@ export default function FacultyScreen() {
       clearForm();
       fetchInitialData();
     } catch (error: any) {
-      console.error("Add Faculty Error Payload:", error);
-      Alert.alert("Error", error?.response?.data?.detail || "Save karne mein dikkat aayi.");
+      console.error("Add Faculty Error:", error?.response?.data || error);
+      const errMsg = error?.response?.data?.detail || "Save karne mein dikkat aayi.";
+      Alert.alert("Error", errMsg);
     }
   };
 
-  // 🚀 FIXED: Secure dynamic header parsing mapping
   const handleEditFaculty = async () => {
     if (!selectedFaculty) return;
 
@@ -127,13 +128,13 @@ export default function FacultyScreen() {
       const token = await AsyncStorage.getItem("user_token");
 
       await (api as any).put(`/faculty/edit/${selectedFaculty.faculty_id}`, {
-        name,
-        designation: subject,
+        name: name.trim(),
+        designation: subject.trim(),
         photo_url: photoUrl,
-        about
+        about: about.trim()
       }, {
         headers: {
-          Authorization: `Bearer ${token}`
+          "Authorization": `Bearer ${token}`
         }
       });
 
@@ -142,11 +143,11 @@ export default function FacultyScreen() {
       clearForm();
       fetchInitialData();
     } catch (error: any) {
-      Alert.alert("Error", error?.response?.data?.detail || "Update process interrupt ho gaya.");
+      const errMsg = error?.response?.data?.detail || "Update process interrupt ho gaya.";
+      Alert.alert("Error", errMsg);
     }
   };
 
-  // 🚀 FIXED: Secure Delete Auth sequence pass execution
   const handleDeleteFaculty = async (facultyId: string) => {
     Alert.alert(
       "Confirm Delete",
@@ -160,17 +161,16 @@ export default function FacultyScreen() {
             try {
               const token = await AsyncStorage.getItem("user_token");
 
-              await (api as any).request({ 
-                method: 'DELETE', 
-                url: `/faculty/delete/${facultyId}`,
+              await (api as any).delete(`/faculty/delete/${facultyId}`, {
                 headers: {
-                  Authorization: `Bearer ${token}`
+                  "Authorization": `Bearer ${token}`
                 }
               });
               Alert.alert("Removed", "Faculty member successfully deleted.");
               fetchInitialData();
             } catch (error: any) {
-              Alert.alert("Error", error?.response?.data?.detail || "Delete process failed.");
+              const errMsg = error?.response?.data?.detail || "Delete process failed.";
+              Alert.alert("Error", errMsg);
             }
           }
         }
