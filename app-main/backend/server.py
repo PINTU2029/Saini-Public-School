@@ -349,39 +349,46 @@ class ChatbotIn(BaseModel):
 
 # 📧 SECURITY CONFIG FROM .ENV (Ensure parameters exist in your environment)
 SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 465
+SMTP_PORT = 587
 SENDER_EMAIL = os.environ.get("SMTP_SENDER_EMAIL", "")
 SENDER_PASSWORD = os.environ.get("SMTP_SENDER_PASSWORD", "")
 
+import httpx
+
 def send_otp_email(receiver_email: str, otp: str):
     try:
-        msg = MIMEMultipart()
-        msg['From'] = SENDER_EMAIL
-        msg['To'] = receiver_email
-        msg['Subject'] = "Saini Public School - Email Verification OTP"
-        
-        body = f"""
+        html_content = f"""
         <html>
             <body style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                 <h2 style="color: #047857;">Welcome to Saini Public School!</h2>
-                <p>Use the following One-Time Password (OTP) to verify your email address and complete registration:</p>
-                <div style="background-color: #F1F5F9; padding: 16px; border-radius: 8px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #047857; margin: 20px 0;">
-                    {otp}
-                </div>
-                <p style="font-size: 12px; color: #64748B;">This OTP is valid for 10 minutes. Please do not share this code with anyone.</p>
+                <p>Your secure verification code (OTP) is:</p>
+                <h1 style="background: #f0fdf4; padding: 10px; display: inline-block; letter-spacing: 2px; color: #166534;">{otp}</h1>
+                <p>This code is valid for 10 minutes. Please do not share it with anyone.</p>
             </body>
         </html>
         """
-        msg.attach(MIMEText(body, 'html'))
-        
-        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            server.sendmail(SENDER_EMAIL, receiver_email, msg.as_string())
-        return True
-    except Exception as e:
-        print("SMTP Pipeline Error:", str(e))
-        return False
 
+        # 🌐 Direct Cloud Outbound API Method (No Port 587 Blockage)
+        response = httpx.post(
+            "https://api.mailersend.com/v1/email",
+            headers={
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            json={
+                "to": receiver_email,
+                "subject": "Saini Public School - Email Verification OTP",
+                "html": html_content
+            },
+            timeout=10.0
+        )
+        
+        print(f"Cloud API Email Dispatch Status: {response.status_code}")
+        return True
+
+    except Exception as e:
+        print(f"Cloud Network Mail Pipeline Exception: {str(e)}")
+        raise Exception("Failed to send email via Cloud API network gateway.")
 
 @api.post("/auth/send-otp")
 async def send_registration_otp(inp: OTPRequestIn):
