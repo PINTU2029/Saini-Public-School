@@ -36,7 +36,7 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // 📧 OTP Verification State Management Flags
+  //  OTP Verification State Management Flags
   const [otpModalVisible, setOtpModalVisible] = useState(false);
   const [otpInput, setOtpInput] = useState("");
   const [otpError, setOtpError] = useState("");
@@ -70,8 +70,10 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      // Direct send OTP trigger request
-      const response = await fetch("http://localhost:8000/api/auth/send-otp", {
+      //  Dynamic URL Generation
+      const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:8000";
+      
+      const response = await fetch(`${BASE_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim().toLowerCase() }),
@@ -83,7 +85,6 @@ export default function RegisterScreen() {
         throw new Error(data.detail || "Failed to initiate OTP check");
       }
 
-      // Open security verification modal box display view
       setOtpError("");
       setOtpInput("");
       setOtpModalVisible(true);
@@ -95,7 +96,7 @@ export default function RegisterScreen() {
     }
   }
 
-  // ⚡ STEP 2: Validate OTP Token & Finalize User DB Registration Pipeline
+  //  STEP 2: Validate OTP Token & Finalize User DB Registration Pipeline
   async function onVerifyAndRegister() {
     setOtpError("");
     if (otpInput.trim().length !== 6) {
@@ -105,8 +106,11 @@ export default function RegisterScreen() {
 
     setOtpLoading(true);
     try {
+      // Dynamic URL Generation
+      const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
       // Part A: Cross check verify OTP
-      const verifyRes = await fetch("http://localhost:8000/api/auth/verify-otp", {
+      const verifyRes = await fetch(`${BASE_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -122,7 +126,7 @@ export default function RegisterScreen() {
       }
 
       // Part B: OTP verified successfully! Trigger final main system registration endpoint.
-      const registerRes = await fetch("http://localhost:8000/api/auth/register", {
+      const registerRes = await fetch(`${BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -142,7 +146,6 @@ export default function RegisterScreen() {
         throw new Error(registerData.detail || "Registration processing failure.");
       }
 
-      // Close modal structure and route user securely to authentication portal
       setOtpModalVisible(false);
       router.replace("/login");
 
