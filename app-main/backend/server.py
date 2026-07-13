@@ -353,8 +353,6 @@ SMTP_PORT = 587
 SENDER_EMAIL = os.environ.get("SMTP_SENDER_EMAIL", "")
 SENDER_PASSWORD = os.environ.get("SMTP_SENDER_PASSWORD", "")
 
-import httpx
-
 def send_otp_email(receiver_email: str, otp: str):
     try:
         html_content = f"""
@@ -368,35 +366,37 @@ def send_otp_email(receiver_email: str, otp: str):
         </html>
         """
 
-        # 🌐 Free Resilient Cloud Edge SMTP Mail Router (Direct HTTPS API Delivery Protocol)
-        # Yeh universal endpoint internal network infrastructure parameters par direct authenticate karta hai
+        # 🔒 Purely dynamic fetching from your .env / Render Environment Config
+        WEB3FORMS_KEY = os.environ.get("WEB3FORMS_ACCESS_KEY", "")
+
+        # Proper JSON and Accept headers to prevent 403 Forbidden on backend calls
         response = httpx.post(
-            "https://api.brevo.com/v3/smtp/email",
+            "https://api.web3forms.com/submit",
             headers={
-                "accept": "application/json",
-                "content-type": "application/json",
-                "api-key": "api-anonymous-transactional-delivery-token"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
             json={
-                "sender": {"name": "Saini Public School", "email": "onboarding@saini-school.onrender.com"},
-                "to": [{"email": receiver_email}],
+                "access_key": WEB3FORMS_KEY,
+                "from_name": "Saini Public School",
                 "subject": "Saini Public School - Email Verification OTP",
-                "htmlContent": html_content
+                "to": receiver_email,
+                "html": html_content
             },
             timeout=12.0
         )
         
-        print(f"Cloud Router Dispatch Status: {response.status_code}")
-        print(f"Cloud Router System Logs: {response.text}")
+        print(f"Web3Forms Dispatch Status: {response.status_code}")
+        print(f"Web3Forms Response: {response.text}")
         
-        if response.status_code in [200, 201, 202]:
+        if response.status_code == 200:
             return True
         else:
             return False
 
     except Exception as e:
-        print(f"Global Transactional Mail Gateway Exception: {str(e)}")
-        raise Exception("Failed to send email via standard cloud transactional gateway.")
+        print(f"Mail Pipeline Exception: {str(e)}")
+        raise Exception("Failed to send email via Cloud API network gateway.")
     
     
 @api.post("/auth/send-otp")
@@ -426,16 +426,16 @@ async def send_registration_otp(inp: OTPRequestIn):
         upsert=True
     )
     
-    # SMTP secure utility pipeline activation trigger
+    # Secure API utility pipeline activation trigger
     if send_otp_email(email, otp_code):
         return {"status": "success", "message": "Verification OTP sent to your email."}
     else:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Failed to send email. Check SMTP settings in .env file."
+            detail="Failed to send email. Check WEB3FORMS_ACCESS_KEY configuration."
         )
-
-
+    
+    
 # ==========================================
 # ⚡ BLOCK 2: VERIFY REGISTER OTP ENDPOINT
 # ==========================================
