@@ -171,8 +171,13 @@ export default function RegisterScreen() {
         throw new Error(registerData.detail || "Registration processing failure.");
       }
 
+      // 🔥 POPUP FIX: Pehle modal close karo taaki OS system flow submit complete samjhe
       setOtpModalVisible(false);
-      router.replace("/login");
+      
+      // Halka sa delay taaki fields context destroy hone se pehle password save popup push ho sake
+      setTimeout(() => {
+        router.replace("/login");
+      }, 100);
 
     } catch (e: any) {
       setOtpError(e?.message || "Transaction validation collapsed.");
@@ -223,6 +228,8 @@ export default function RegisterScreen() {
                 placeholderTextColor={COLORS.textMuted}
                 autoCapitalize="none"
                 keyboardType="email-address"
+                autoComplete="email"
+                textContentType="emailAddress"
               />
 
               {/* Role Select */}
@@ -315,6 +322,8 @@ export default function RegisterScreen() {
                 placeholder="••••••••"
                 placeholderTextColor={COLORS.textMuted}
                 secureTextEntry
+                autoComplete="new-password"
+                textContentType="newPassword"
               />
 
               {/* Confirm Password */}
@@ -326,6 +335,8 @@ export default function RegisterScreen() {
                 placeholder="••••••••"
                 placeholderTextColor={COLORS.textMuted}
                 secureTextEntry
+                autoComplete="new-password"
+                textContentType="newPassword"
               />
 
               {error ? <Text style={styles.error}>{error}</Text> : null}
