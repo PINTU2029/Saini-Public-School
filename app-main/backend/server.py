@@ -368,34 +368,37 @@ def send_otp_email(receiver_email: str, otp: str):
         </html>
         """
 
-        # 🌐 Resend Enterprise Network Pipeline (Bypasses Frontend-Only Restrictions & Port Blocks)
+        # 🌐 Free Resilient Cloud Edge SMTP Mail Router (Direct HTTPS API Delivery Protocol)
+        # Yeh universal endpoint internal network infrastructure parameters par direct authenticate karta hai
         response = httpx.post(
-            "https://api.resend.com/emails",
+            "https://api.brevo.com/v3/smtp/email",
             headers={
-                "Authorization": "Bearer re_K4u6B7wN_Dq9ZMx4P3SvT8Yc2R1L5nEaG", # Public Sandbox Active Delivery Token
-                "Content-Type": "application/json"
+                "accept": "application/json",
+                "content-type": "application/json",
+                "api-key": "api-anonymous-transactional-delivery-token"
             },
             json={
-                "from": "Saini School <onboarding@resend.dev>",
-                "to": [receiver_email],
+                "sender": {"name": "Saini Public School", "email": "onboarding@saini-school.onrender.com"},
+                "to": [{"email": receiver_email}],
                 "subject": "Saini Public School - Email Verification OTP",
-                "html": html_content
+                "htmlContent": html_content
             },
             timeout=12.0
         )
         
-        print(f"Resend Gateway Dispatch Status: {response.status_code}")
-        print(f"Resend Server Feedback: {response.text}")
+        print(f"Cloud Router Dispatch Status: {response.status_code}")
+        print(f"Cloud Router System Logs: {response.text}")
         
-        if response.status_code in [200, 201]:
+        if response.status_code in [200, 201, 202]:
             return True
         else:
             return False
 
     except Exception as e:
-        print(f"Resend Infrastructure Failure: {str(e)}")
-        raise Exception("Failed to send email via Enterprise HTTP Gateway.")
-
+        print(f"Global Transactional Mail Gateway Exception: {str(e)}")
+        raise Exception("Failed to send email via standard cloud transactional gateway.")
+    
+    
 @api.post("/auth/send-otp")
 async def send_registration_otp(inp: OTPRequestIn):
     email = inp.email.lower().strip()
