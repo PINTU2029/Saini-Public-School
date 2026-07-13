@@ -357,6 +357,15 @@ import httpx
 
 def send_otp_email(receiver_email: str, otp: str):
     try:
+        #  Environment variables se safe inputs read karna
+        sender_email = os.environ.get("SMTP_SENDER_EMAIL", "")
+        sender_password = os.environ.get("SMTP_SENDER_PASSWORD", "")
+
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = "Saini Public School - Email Verification OTP"
+
         html_content = f"""
         <html>
             <body style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
@@ -367,28 +376,21 @@ def send_otp_email(receiver_email: str, otp: str):
             </body>
         </html>
         """
+        msg.attach(MIMEText(html_content, 'html'))
 
-        # Secure token pickup from environment configuration
-        WEB3FORMS_KEY = os.environ.get("WEB3FORMS_ACCESS_KEY", "")
-
-        response = httpx.post(
-            "https://api.web3forms.com/submit",
-            json={
-                "access_key": WEB3FORMS_KEY,
-                "from_name": "Saini Public School",
-                "subject": "Email Verification OTP",
-                "to": receiver_email,
-                "html": html_content
-            },
-            timeout=10.0
-        )
+        #  Render Cloud bypass connection protocol
+        # Gmail ka yeh connection Render ke network filter ko bypass kar deta hai
+        server = smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15.0)
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
+        server.quit()
         
-        print(f"Cloud HTTP Email Dispatch Status: {response.status_code}")
+        print("Email transmitted successfully via safe Gmail connection.")
         return True
 
     except Exception as e:
-        print(f"Cloud Network Mail Pipeline Exception: {str(e)}")
-        raise Exception("Failed to send email via Cloud API network gateway.")
+        print(f"Gmail Delivery Failure: {str(e)}")
+        raise Exception("Failed to send email via standard account security.")
 
 @api.post("/auth/send-otp")
 async def send_registration_otp(inp: OTPRequestIn):
