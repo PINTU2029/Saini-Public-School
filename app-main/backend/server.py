@@ -359,59 +359,11 @@ SENDER_PASSWORD = os.environ.get("SMTP_SENDER_PASSWORD", "")
 
 import os
 import random
-import httpx
 from fastapi import HTTPException, status
 
-def send_otp_email(receiver_email: str, otp: str):
-    try:
-        html_content = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2 style="color: #047857;">Welcome to Saini Public School!</h2>
-                <p>Your secure verification code (OTP) is:</p>
-                <h1 style="background: #f0fdf4; padding: 10px; display: inline-block; letter-spacing: 2px; color: #166534;">{otp}</h1>
-                <p>This code is valid for 10 minutes. Please do not share it with anyone.</p>
-            </body>
-        </html>
-        """
-
-        # 🔒 STRICTLY FROM ENVIRONMENT ONLY (No hardcoded keys)
-        WEB3FORMS_KEY = os.environ.get("WEB3FORMS_ACCESS_KEY", "")
-
-        if not WEB3FORMS_KEY:
-            print("Error: WEB3FORMS_ACCESS_KEY missing from environment setup.")
-            return False
-
-        # Web3Forms API Call
-        response = httpx.post(
-            "https://api.web3forms.com/submit",
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            json={
-                "access_key": WEB3FORMS_KEY,
-                "from_name": "Saini Public School",
-                "subject": "Email Verification OTP",
-                "to": receiver_email,
-                "html": html_content
-            },
-            timeout=12.0
-        )
-        
-        print(f"Web3Forms Dispatch Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            return True
-        else:
-            print(f"Provider Error Payload: {response.text}")
-            return False
-
-    except Exception as e:
-        print(f"Mail Pipeline Exception: {str(e)}")
-        return False
-    
-
+# ==========================================
+# ⚡ BLOCK 1: SECURE DYNAMIC OTP GENERATION (EmailJS Config Pipeline)
+# ==========================================
 @api.post("/auth/send-otp")
 async def send_registration_otp(inp: OTPRequestIn):
     email = inp.email.lower().strip()
@@ -439,12 +391,17 @@ async def send_registration_otp(inp: OTPRequestIn):
         upsert=True
     )
     
-    # Backend direct response generate karke frontend ko secure delivery handover kar dega
+    # 🔥 Backend se dynamic keys aur OTP payload client side (frontend) ko handover kar do
     return {
         "status": "success", 
-        "message": "OTP state synchronized",
-        "otp_payload": otp_code  # Yeh string frontend read kar lega
+        "otp_payload": otp_code,
+        "emailjs_config": {
+            "service_id": os.environ.get("VITE_EMAILJS_SERVICE_ID", "service_y9ge1cq"),
+            "template_id": os.environ.get("VITE_EMAILJS_TEMPLATE_ID", "template_u0643it"),
+            "public_key": os.environ.get("VITE_EMAILJS_PUBLIC_KEY", "eni5lEx_mPHe2Dq7m")
+        }
     }
+
 
 # ==========================================
 # ⚡ BLOCK 2: VERIFY REGISTER OTP ENDPOINT
@@ -496,7 +453,7 @@ async def register(inp: RegisterIn):
             detail="Email address verification pending. Please verify via OTP first."
         )
 
-    # Email Exists
+    # Email Exists Check
     if await db.users.find_one({"email": email}):
         raise HTTPException(
             status_code=409,
@@ -504,8 +461,6 @@ async def register(inp: RegisterIn):
         )
 
     user_id = new_id()
-
-    # Role check ke hisab se class_id allocate karna
     final_class_id = inp.class_id if inp.role == "student" else None
 
     doc = {
@@ -565,7 +520,6 @@ async def register(inp: RegisterIn):
         "token": token,
         "user": UserOut(**user)
     }
-
 
 
 @api.post("/auth/login", response_model=TokenOut)
@@ -848,7 +802,7 @@ async def fees_by_student(student_id: str, user: dict = Depends(get_current_user
     return docs
 
 
-# 💳 1. Razorpay Order Creation Endpoint
+#  1. Razorpay Order Creation Endpoint
 @api.post("/fees/razorpay/create-order")
 async def create_razorpay_order(inp: RazorpayOrderIn, user: dict = Depends(get_current_user)):
     fee = await db.fees.find_one({"fee_id": inp.fee_id}, {"_id": 0})

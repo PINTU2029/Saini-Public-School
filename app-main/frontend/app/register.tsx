@@ -36,13 +36,13 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  //  OTP Verification State Management Flags
+  // OTP Verification State Management Flags
   const [otpModalVisible, setOtpModalVisible] = useState(false);
   const [otpInput, setOtpInput] = useState("");
   const [otpError, setOtpError] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
 
-  //  STEP 1: Form Validation & Triggering OTP Email Transmission
+  // 🚀 STEP 1: Form Validation & Triggering OTP Email Transmission via Backend Secure Config Fetch
   async function onSubmit() {
     setError("");
 
@@ -70,9 +70,10 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      //  Dynamic URL Generation
+      // Dynamic URL Generation
       const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL || "http://localhost:8000";
       
+      // Part A: Fetch Secure OTP payload and runtime EmailJS credentials from backend
       const response = await fetch(`${BASE_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,6 +84,30 @@ export default function RegisterScreen() {
 
       if (!response.ok) {
         throw new Error(data.detail || "Failed to initiate OTP check");
+      }
+
+      const generatedOTP = data.otp_payload;
+      const config = data.emailjs_config; // Backend ki secure env se aayi hui dynamic keys
+
+      // Part B: Direct client-side routing to EmailJS server without hardcoding variables locally
+      const emailjsRes = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: config.service_id,
+          template_id: config.template_id,
+          user_id: config.public_key,
+          template_params: {
+            email: email.trim().toLowerCase(),
+            passcode: generatedOTP,
+          }
+        }),
+      });
+
+      if (!emailjsRes.ok) {
+        const errText = await emailjsRes.text();
+        console.error("EmailJS Gateway Response Error Pipeline:", errText);
+        throw new Error("Failed to dispatch email verification transmission.");
       }
 
       setOtpError("");
@@ -96,7 +121,7 @@ export default function RegisterScreen() {
     }
   }
 
-  //  STEP 2: Validate OTP Token & Finalize User DB Registration Pipeline
+  // 🚀 STEP 2: Validate OTP Token & Finalize User DB Registration Pipeline
   async function onVerifyAndRegister() {
     setOtpError("");
     if (otpInput.trim().length !== 6) {
@@ -261,7 +286,7 @@ export default function RegisterScreen() {
                     </ScrollView>
                   )}
 
-                  {/*  Dynamic Bus Selector Toggle Component */}
+                  {/* Dynamic Bus Selector Toggle Component */}
                   <Text style={styles.label}>Require School Bus Facility?</Text>
                   <View style={styles.busToggleRow}>
                     <TouchableOpacity 
@@ -328,7 +353,7 @@ export default function RegisterScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/*  SECURITY MODAL POP-UP LAYER: EMAIL OTP SUBMIT */}
+      {/* SECURITY MODAL POP-UP LAYER: EMAIL OTP SUBMIT */}
       <Modal visible={otpModalVisible} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -509,7 +534,7 @@ const styles = StyleSheet.create({
   loginLinkWrap: { marginTop: 24, alignItems: "center", marginBottom: 20 },
   loginLinkText: { color: COLORS.textMuted, fontSize: 14 },
 
-  //  MODAL STYLING CONFIGURATIONS
+  // MODAL STYLING CONFIGURATIONS
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center" },
   modalContent: { width: "88%", maxWidth: 400, backgroundColor: COLORS.surface, borderRadius: RADII.xl, padding: 24, alignItems: "center", borderWidth: 1, borderColor: COLORS.border },
   modalTitle: { fontSize: 20, fontWeight: "800", color: COLORS.textMain, marginBottom: 8 },
