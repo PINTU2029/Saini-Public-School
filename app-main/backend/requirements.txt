@@ -27,4 +27,4 @@ typer>=0.9.0
 google-generativeai>=0.8.0
 httpx
 groq
-python-dotenv
+razorpay
