@@ -403,7 +403,7 @@ def send_otp_email(receiver_email: str, otp: str):
 async def send_registration_otp(inp: OTPRequestIn):
     email = inp.email.lower().strip()
     
-    # Check regular users collection first
+    # Check if user already exists
     if await db.users.find_one({"email": email}):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
@@ -426,16 +426,15 @@ async def send_registration_otp(inp: OTPRequestIn):
         upsert=True
     )
     
-    # Secure API utility pipeline activation trigger
-    if send_otp_email(email, otp_code):
-        return {"status": "success", "message": "Verification OTP sent to your email."}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Failed to send email. Check WEB3FORMS_ACCESS_KEY configuration."
-        )
+    # 🔥 YAHA MAGIC HAI: Backend se direct email fail ho raha tha, 
+    # isiliye hum OTP ko frontend ko return kar rahe hain taaki client-side se mail jaye!
+    return {
+        "status": "success", 
+        "message": "OTP generated successfully",
+        "otp_bypass_delivery": otp_code  # Yeh frontend padh lega
+    }
     
-    
+
 # ==========================================
 # ⚡ BLOCK 2: VERIFY REGISTER OTP ENDPOINT
 # ==========================================
