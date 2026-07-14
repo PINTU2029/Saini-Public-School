@@ -51,7 +51,7 @@ export default function FacultyScreen() {
 
   const fetchInitialData = async () => {
     try {
-      //  HARD PATCH: Web memory layers dynamically verify local runtime state logic
+      // 🔒 HARD PATCH: Web memory layers dynamically verify local runtime state logic
       let role = await AsyncStorage.getItem('user_role');
       
       // Secondary fallback parameter parse configuration logic for browser targets
@@ -61,10 +61,11 @@ export default function FacultyScreen() {
       
       console.log("Current dynamic role profile parsing active status:", role);
 
+      // 🔐 FIXED: Strict production check active logic without debugging variables leaks
       if (role && role.toLowerCase().trim() === 'admin') {
         setIsAdmin(true);
       } else {
-        setIsAdmin(true); // 🛠️ TESTING OVERRIDE ACCELERATOR: Button show hone ka confirm patch
+        setIsAdmin(false); // 🛡️ Teacher, Parent, Student sabhi ke liye clear block setup
       }
 
       const data = await api.get<any>("/faculties");
@@ -247,6 +248,7 @@ export default function FacultyScreen() {
           <Text style={styles.headerTitle}>School Faculty</Text>
         </View>
 
+        {/* Locked for non-admins */}
         {isAdmin && (
           <TouchableOpacity 
             style={styles.addButton} 
@@ -280,6 +282,7 @@ export default function FacultyScreen() {
               </Text>
             ) : null}
 
+            {/* Action panel completely safe under validation logic */}
             {isAdmin && (
               <View style={styles.adminActionsRow}>
                 <TouchableOpacity style={[styles.actionBtn, styles.editBtn]} onPress={() => openEditModal(item)}>
