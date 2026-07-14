@@ -166,7 +166,7 @@ export default function FacultyScreen() {
       clearForm();
       fetchInitialData();
     } catch (error: any) {
-      const errMsg = error?.response?.data?.detail || "Update process interrupt ho gaya.";
+      const errMsg = error?.response?.data?.detail || "You cannot update the profile.";
       if (Platform.OS === 'web') alert("Error: " + errMsg);
       else Alert.alert("Error", errMsg);
     }
@@ -190,7 +190,7 @@ export default function FacultyScreen() {
         else Alert.alert("Removed", "Faculty member successfully deleted.");
         fetchInitialData();
       } catch (error: any) {
-        const errMsg = error?.response?.data?.detail || "Delete process failed.";
+        const errMsg = error?.response?.data?.detail || "You cannot Delete the profile.";
         if (Platform.OS === 'web') alert("Error: " + errMsg);
         else Alert.alert("Error", errMsg);
       }
