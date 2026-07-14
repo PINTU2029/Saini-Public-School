@@ -132,7 +132,7 @@ export default function FacultyScreen() {
       fetchInitialData();
     } catch (error: any) {
       console.error("Add Faculty Error Matrix:", error?.response?.data || error);
-      const errMsg = error?.response?.data?.detail || "Save karne mein dikkat aayi.";
+      const errMsg = error?.response?.data?.detail || "You are not Admin So cannot Save the profile.";
       
       if (Platform.OS === 'web') alert("Error: " + errMsg);
       else Alert.alert("Error", errMsg);
@@ -166,7 +166,7 @@ export default function FacultyScreen() {
       clearForm();
       fetchInitialData();
     } catch (error: any) {
-      const errMsg = error?.response?.data?.detail || "You cannot update the profile.";
+      const errMsg = error?.response?.data?.detail || "You are not Admin So cannot Update the profile.";
       if (Platform.OS === 'web') alert("Error: " + errMsg);
       else Alert.alert("Error", errMsg);
     }
@@ -190,7 +190,7 @@ export default function FacultyScreen() {
         else Alert.alert("Removed", "Faculty member successfully deleted.");
         fetchInitialData();
       } catch (error: any) {
-        const errMsg = error?.response?.data?.detail || "You cannot Delete the profile.";
+        const errMsg = error?.response?.data?.detail || "You are not Admin So cannot Delete the profile.";
         if (Platform.OS === 'web') alert("Error: " + errMsg);
         else Alert.alert("Error", errMsg);
       }
