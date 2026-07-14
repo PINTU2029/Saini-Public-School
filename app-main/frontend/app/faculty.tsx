@@ -132,7 +132,7 @@ export default function FacultyScreen() {
       fetchInitialData();
     } catch (error: any) {
       console.error("Add Faculty Error Matrix:", error?.response?.data || error);
-      const errMsg = error?.response?.data?.detail || "You are not Admin So cannot Save the profile.";
+      const errMsg = error?.response?.data?.detail || "You are not Admin So cannot Add or Save the profile.";
       
       if (Platform.OS === 'web') alert("Error: " + errMsg);
       else Alert.alert("Error", errMsg);
