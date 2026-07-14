@@ -9,7 +9,7 @@ const DICT: Dict = {
   app_name: { en: "Vidya Sahaayak", hi: "विद्या सहायक" },
   tagline: { en: "Smart School. Happy Children.", hi: "स्मार्ट स्कूल। खुश बच्चे।" },
   login: { en: "Login", hi: "लॉगिन करें" },
-  logout: { en: "Logout", hi: "लॉगआउट" },
+  logout: { en: "Logout", hi: "लॉगआाउट" },
   email: { en: "Email", hi: "ईमेल आईडी" },
   password: { en: "Password", hi: "पासवर्ड" },
   welcome: { en: "Welcome", hi: "स्वागत है" },
@@ -25,7 +25,7 @@ const DICT: Dict = {
   timetable: { en: "Timetable", hi: "समय सारणी" },
   bus_tracking: { en: "Bus Tracking", hi: "बस ट्रैकिंग" },
   gallery: { en: "Photo Gallery", hi: "फोटो गैलरी" },
-  lms: { en: "Learning Material", hi: "पढ़ाई सामग्री" },
+  lms: { en: "Learning Material", hi: "पढ़ाई सामग्री" },
   leaves: { en: "Leaves", hi: "छुट्टियां" },
   ai_chatbot: { en: "AI Assistant", hi: "एआई सहायक" },
   admin_broadcast: { en: "Broadcasts", hi: "सूचना भेजें" },
@@ -52,7 +52,7 @@ const DICT: Dict = {
   english: { en: "English", hi: "अंग्रेजी" },
   no_data: { en: "Nothing here yet.", hi: "अभी यहां कुछ नहीं है।" },
 
-  // --- REGISTRATION & EXTRA AUTH KEYS (Jo pehle missing thhi) ---
+  // --- REGISTRATION & EXTRA AUTH KEYS ---
   register: { en: "Register", hi: "पंजीकरण (रजिस्टर)" },
   create_account: { en: "Create Account", hi: "खाता बनाएं" },
   full_name: { en: "Full Name", hi: "पूरा नाम" },
@@ -65,7 +65,22 @@ const DICT: Dict = {
   student: { en: "Student", hi: "छात्र (Student)" },
   teacher: { en: "Teacher", hi: "शिक्षक (Teacher)" },
   parent: { en: "Parent", hi: "अभिभावक (Parent)" },
-  admin: { en: "Admin", hi: "एडमिन (Admin)" }
+  admin: { en: "Admin", hi: "एडमिन (Admin)" },
+
+  // 🚀 FIXED: Dynamic missing dashboard cards strings translation array injection
+  create_report_card: { en: "Create Report Card", hi: "रिपोर्ट कार्ड बनाएं" },
+  fees_overview: { en: "Fees Overview", hi: "फीस का विवरण" },
+  our_faculty: { en: "Our Faculty", hi: "हमारे शिक्षक (Faculty)" },
+  
+  // Faculty screens fields text placeholders mapping updates
+  add_new: { en: "+ Add New", hi: "+ नया जोड़ें" },
+  school_faculty: { en: "School Faculty", hi: "स्कूल संकाय (Faculty)" },
+  faculty_name: { en: "Faculty Name *", hi: "शिक्षक का नाम *" },
+  subject_role: { en: "Subject / Role *", hi: "विषय / पद *" },
+  write_about: { en: "Write about them...", hi: "उनके बारे में कुछ लिखें..." },
+  update_details: { en: "Update Faculty Details", hi: "शिक्षक विवरण अपडेट करें" },
+  choose_photo: { en: "📸 Choose Photo from Gallery", hi: "📸 गैलरी से फोटो चुनें" },
+  change_photo: { en: "📸 Change Photo", hi: "📸 फोटो बदलें" }
 };
 
 interface LangCtx {
