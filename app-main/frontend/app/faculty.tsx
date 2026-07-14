@@ -44,14 +44,14 @@ export default function FacultyScreen() {
   const [about, setAbout] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
 
-  // 🔄 Dynamic runtime interface sync matrix
+  //  Dynamic runtime interface sync matrix
   useEffect(() => {
     fetchInitialData();
   }, []);
 
   const fetchInitialData = async () => {
     try {
-      // 🔒 HARD PATCH: Web memory layers dynamically verify local runtime state logic
+      //  HARD PATCH: Web memory layers dynamically verify local runtime state logic
       let role = await AsyncStorage.getItem('user_role');
       
       // Secondary fallback parameter parse configuration logic for browser targets

@@ -62,14 +62,14 @@ JWT_EXPIRE_HOURS = int(os.environ.get("JWT_EXPIRE_HOURS", "168"))
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
-# ⚡ Dynamic Client Initialization for Chatbot using modern SDK syntax
+#  Dynamic Client Initialization for Chatbot using modern SDK syntax
 GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
 if GEMINI_KEY:
     legacy_genai.configure(api_key=GEMINI_KEY)
 
 app = FastAPI(title="School Management App")
 
-# ⚡ FASTAPI CORSMIDDLEWARE SETUP: Standard structure that automatically maps dynamic routes
+#  FASTAPI CORSMIDDLEWARE SETUP: Standard structure that automatically maps dynamic routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -154,14 +154,14 @@ class LoginIn(BaseModel):
 
 
 
-# 👥 Roles definition 
+#  Roles definition 
 class Role(str, Enum):
     admin = "admin"
     teacher = "teacher"
     student = "student"
     parent = "parent"
 
-# 📝 MAIN REGISTRATION MODEL SCHEMA
+#  MAIN REGISTRATION MODEL SCHEMA
 class RegisterIn(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
@@ -171,7 +171,7 @@ class RegisterIn(BaseModel):
     class_id: Optional[str] = Field(None, description="Class from 1 to 12 for students")
     bus_facility: bool = Field(False, description="Whether student opted for transport facility")
 
-    # 🔒 Strict Password & Confirm Password Match Validator
+    #  Strict Password & Confirm Password Match Validator
     @model_validator(mode='after')
     def check_passwords_match(self) -> 'RegisterIn':
         pw = self.password
@@ -186,7 +186,7 @@ class OTPRequestIn(BaseModel):
     email: EmailStr
 
 
-# 🔑 NEW: OTP VERIFICATION REQUEST SCHEMA
+#  NEW: OTP VERIFICATION REQUEST SCHEMA
 class OTPVerifyIn(BaseModel):
     email: EmailStr
     otp: str = Field(..., min_length=6, max_length=6, description="6-Digit Verification PIN")
@@ -344,17 +344,17 @@ class ChatbotIn(BaseModel):
 
 
 # ==========================================
-# ⚡ BLOCK 1: SMTP EMAIL SENDER + SEND REGISTER OTP ENDPOINT
+#  BLOCK 1: SMTP EMAIL SENDER + SEND REGISTER OTP ENDPOINT
 # ==========================================
 
-# 📧 SECURITY CONFIG FROM .ENV (Ensure parameters exist in your environment)
+#  SECURITY CONFIG FROM .ENV (Ensure parameters exist in your environment)
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SENDER_EMAIL = os.environ.get("SMTP_SENDER_EMAIL", "")
 SENDER_PASSWORD = os.environ.get("SMTP_SENDER_PASSWORD", "")
 
 # ==========================================
-# ⚡ BLOCK 1: SECURE DYNAMIC EMAIL DISPATCH
+#  BLOCK 1: SECURE DYNAMIC EMAIL DISPATCH
 # ==========================================
 
 import os
@@ -362,7 +362,7 @@ import random
 from fastapi import HTTPException, status
 
 # ==========================================
-# ⚡ BLOCK 1: SECURE DYNAMIC OTP GENERATION (EmailJS Config Pipeline)
+#  BLOCK 1: SECURE DYNAMIC OTP GENERATION (EmailJS Config Pipeline)
 # ==========================================
 @api.post("/auth/send-otp")
 async def send_registration_otp(inp: OTPRequestIn):
@@ -391,7 +391,7 @@ async def send_registration_otp(inp: OTPRequestIn):
         upsert=True
     )
     
-    # 🔥 Backend se dynamic keys aur OTP payload client side (frontend) ko handover kar do
+    #  Backend se dynamic keys aur OTP payload client side (frontend) ko handover kar do
     return {
         "status": "success", 
         "otp_payload": otp_code,
@@ -404,7 +404,7 @@ async def send_registration_otp(inp: OTPRequestIn):
 
 
 # ==========================================
-# ⚡ BLOCK 2: VERIFY REGISTER OTP ENDPOINT
+#  BLOCK 2: VERIFY REGISTER OTP ENDPOINT
 # ==========================================
 @api.post("/auth/verify-otp")
 async def verify_registration_otp(inp: OTPVerifyIn):
@@ -432,7 +432,7 @@ async def verify_registration_otp(inp: OTPVerifyIn):
 
 
 # ==========================================
-# ⚡ BLOCK 3: FINAL REGISTER (With Verification Barrier)
+#  BLOCK 3: FINAL REGISTER (With Verification Barrier)
 # ==========================================
 @api.post("/auth/register", response_model=TokenOut)
 async def register(inp: RegisterIn):
@@ -445,7 +445,7 @@ async def register(inp: RegisterIn):
 
     email = inp.email.lower().strip()
 
-    # 🛡️ SECURITY BARRIER: Enforce email verification check before processing DB document inserts
+    #  SECURITY BARRIER: Enforce email verification check before processing DB document inserts
     otp_check = await db.otp_verifications.find_one({"email": email})
     if not otp_check or not otp_check.get("verified", False):
         raise HTTPException(
@@ -479,10 +479,10 @@ async def register(inp: RegisterIn):
 
     await db.users.insert_one(doc)
 
-    # 🛡️ Clean up verification state record logs
+    #  Clean up verification state record logs
     await db.otp_verifications.delete_one({"email": email})
 
-    # 🔹 FEES AUTOMATION LOGIC FOR STUDENTS
+    #  FEES AUTOMATION LOGIC FOR STUDENTS
     if inp.role == "student" and final_class_id:
         master_fee = await db.fees_structure.find_one({"class_id": final_class_id})
         fee_amount = master_fee["amount"] if master_fee else 5000 
@@ -524,14 +524,14 @@ async def register(inp: RegisterIn):
 
 @api.post("/auth/login", response_model=TokenOut)
 async def login(inp: LoginIn):
-    # ⚡ User input security wrapper: Email ko strict lowercase trim check karenge
+    #  User input security wrapper: Email ko strict lowercase trim check karenge
     email_clean = inp.email.strip().lower()
     user = await db.users.find_one({"email": email_clean})
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
         
-    # ⚡ Password validation safety hook
+    #  Password validation safety hook
     if not verify_password(inp.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
         
@@ -841,7 +841,7 @@ async def create_razorpay_order(inp: RazorpayOrderIn, user: dict = Depends(get_c
         raise HTTPException(status_code=500, detail=f"Razorpay Order Error: {str(e)}")
 
 
-# 🔐 2. Razorpay Payment Signature Verification Endpoint
+#  2. Razorpay Payment Signature Verification Endpoint
 @api.post("/fees/razorpay/verify")
 async def verify_razorpay_payment(inp: RazorpayVerifyIn, user: dict = Depends(get_current_user)):
     fee = await db.fees.find_one({"fee_id": inp.fee_id}, {"_id": 0})
@@ -942,7 +942,7 @@ class ClassFeeConfigItem(BaseModel):
     amount: float
 
 # ==========================================
-# ⚡ DYNAMIC FEES STRUCTURE MANAGEMENT
+#  DYNAMIC FEES STRUCTURE MANAGEMENT
 # ==========================================
 
 @api.get("/admin/fees-structure")
@@ -954,7 +954,7 @@ async def get_master_fees_structure(user: dict = Depends(require_roles("admin", 
     try:
         docs = await db.fees_structure.find({}, {"_id": 0}).to_list(100)
         
-        # Agar DB blank hai, toh default map generate karke bhej do
+     
         if not docs:
             default_structure = []
             for i in range(1, 13):
@@ -977,15 +977,15 @@ async def update_master_fees_structure(inp: ClassFeeConfigItem, user: dict = Dep
     new_amount = float(inp.amount)
 
     try:
-        # 1. Master Fees Structure Table me update ya insert (Upsert) karo
+        # 1. Master Fees Structure 
         await db.fees_structure.update_one(
             {"class_id": class_target},
             {"$set": {"amount": new_amount}},
             upsert=True
         )
 
-        # 2. 🚀 CASCADE ENGINE: Is specific class ke saare students ko target karo
-        # Jo pehle se register hain, unki ONLY pending tuition fees ko adjust karo (Bus fee, status etc. ko bina chede)
+        # 2.  CASCADE ENGINE: Is specific class ke saare students ko target karo
+       
         tuition_title_match = f"Academic Tuition Fee - Class {class_target}"
         
         await db.fees.update_many(
