@@ -936,6 +936,77 @@ async def fees_overview(class_id: Optional[str] = None, status: Optional[str] = 
     }
 
 
+# --- Pydantic Schemas for Master Fees Config ---
+class ClassFeeConfigItem(BaseModel):
+    class_id: str
+    amount: float
+
+# ==========================================
+# ⚡ DYNAMIC FEES STRUCTURE MANAGEMENT
+# ==========================================
+
+@api.get("/admin/fees-structure")
+@api.get("/fees-structure")  # Dono fallback routes handle karne ke liye
+async def get_master_fees_structure(user: dict = Depends(require_roles("admin", "teacher"))):
+    """
+    Admin/Teacher Panel: Pure 1 se 12 classes ki base tuition fee fetch karna.
+    """
+    try:
+        docs = await db.fees_structure.find({}, {"_id": 0}).to_list(100)
+        
+        # Agar DB blank hai, toh default map generate karke bhej do
+        if not docs:
+            default_structure = []
+            for i in range(1, 13):
+                default_structure.append({"class_id": str(i), "amount": 5000.0})
+            return default_structure
+            
+        return docs
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database Fetch Error: {str(e)}")
+
+
+@api.post("/admin/fees-structure")
+async def update_master_fees_structure(inp: ClassFeeConfigItem, user: dict = Depends(require_roles("admin"))):
+    """
+    ⚡ MASTER FIX & CASCADE UPDATE PIPELINE
+    Tick dabate hi yeh master map ko save karega, PLUS saare existing students
+    ki tuition fees database documents me live update kar dega!
+    """
+    class_target = inp.class_id.strip()
+    new_amount = float(inp.amount)
+
+    try:
+        # 1. Master Fees Structure Table me update ya insert (Upsert) karo
+        await db.fees_structure.update_one(
+            {"class_id": class_target},
+            {"$set": {"amount": new_amount}},
+            upsert=True
+        )
+
+        # 2. 🚀 CASCADE ENGINE: Is specific class ke saare students ko target karo
+        # Jo pehle se register hain, unki ONLY pending tuition fees ko adjust karo (Bus fee, status etc. ko bina chede)
+        tuition_title_match = f"Academic Tuition Fee - Class {class_target}"
+        
+        await db.fees.update_many(
+            {
+                "class_id": class_target,
+                "status": "pending",
+                "title": tuition_title_match
+            },
+            {
+                "$set": {
+                    "amount": new_amount
+                }
+            }
+        )
+
+        return {
+            "status": "success",
+            "message": f"Class {class_target} base fee updated to ₹{new_amount}. Existing pending bills synchronized successfully!"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cascade Synchronization Failure: {str(e)}")
 
 
 # ---------- REPORT CARD ----------

@@ -110,7 +110,7 @@ export default function MenuScreen() {
           <Text style={styles.logoutText}>{t("logout")}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.footer}>Vidya Sahaayak v1.0 • Made with care</Text>
+        <Text style={styles.footer}>Saini Public School • Made with care</Text>
         <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
