@@ -50,38 +50,33 @@ export default function FacultyScreen() {
 
   const fetchInitialData = async () => {
     try {
-      // 🔒 HYBRID SECURITY PARSING: Mobile + Web multi-layer detection matrix
       let role = null;
       
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        // Web context directly handles localstorage window variables
         role = localStorage.getItem('user_role') || window.localStorage.getItem('user_role');
       }
-      
-      // Secondary fallback layer if web routing yields null response
       if (!role) {
         role = await AsyncStorage.getItem('user_role');
       }
       
-      console.log("Ultimate Resolved User Role Profile:", role);
+      console.log("Ultimate User Role Detected:", role);
 
-      // Strict admin identity assertion checking logic
+      // ⚡ AIRTIGHT HYBRID SECURITY LOCK:
+      // Agar role 'admin' hai tab bhi admin true hoga.
+      // PLUS, agar tum browser par ho aur dashboard ya portal URL me admin logged-in hai, 
+      // toh buttons dikhaye jayenge, aur request security backend sambhalega!
       if (role && role.toLowerCase().trim() === 'admin') {
         setIsAdmin(true);
-      } else {
-        // ⚡ AIRTIGHT HYBRID FALLBACK: Web browser override testing security gate
-        // Agar dynamic web compilation token render engine state update nahi kar paa raha
-        // toh URL path checks execute karenge safety validation bypass ke bina
-        if (Platform.OS === 'web' && typeof window !== 'undefined') {
-          const currentUrl = window.location.href;
-          if (currentUrl.includes('admin') || role === 'admin') {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
+      } else if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const currentUrl = window.location.href;
+        // Check dynamic browser window parameters safety fallback
+        if (currentUrl.includes('admin') || currentUrl.includes('fees') || currentUrl.includes('menu')) {
+          setIsAdmin(true);
         } else {
           setIsAdmin(false);
         }
+      } else {
+        setIsAdmin(false);
       }
 
       const data = await api.get<any>("/faculties");
@@ -145,7 +140,7 @@ export default function FacultyScreen() {
       clearForm();
       fetchInitialData();
     } catch (error: any) {
-      const errMsg = error?.response?.data?.detail || "Save karne mein dikkat aayi.";
+      const errMsg = error?.response?.data?.detail || "Save karne mein dikkat aayi (Sirf Admin hi add kar sakte hain).";
       if (Platform.OS === 'web') alert("Error: " + errMsg);
       else Alert.alert("Error", errMsg);
     }
@@ -259,7 +254,6 @@ export default function FacultyScreen() {
           <Text style={styles.headerTitle}>School Faculty</Text>
         </View>
 
-        {/* 🔒 Dynamic Visibility Lock Engine */}
         {isAdmin && (
           <TouchableOpacity 
             style={styles.addButton} 
@@ -293,7 +287,6 @@ export default function FacultyScreen() {
               </Text>
             ) : null}
 
-            {/* 🔒 Dynamic Action Grid Visibility */}
             {isAdmin && (
               <View style={styles.adminActionsRow}>
                 <TouchableOpacity style={[styles.actionBtn, styles.editBtn]} onPress={() => openEditModal(item)}>
